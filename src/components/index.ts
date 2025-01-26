@@ -1,0 +1,1 @@
+export { default as SnowAnimation } from './ScenicSpace';
