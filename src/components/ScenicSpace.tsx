@@ -1,19 +1,20 @@
 import { useEffect, useRef } from "react";
 import { BackgroundStarDrawer, ShootingStar } from "@/utils/StarDrawer";
 import { Snowflake } from "@/utils/SnowDrawer";
-import { WitchDrawer } from "@/utils/WitchDrawer";
 import catImage from "/public/girl.png";
 
 const ScenicSpace: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const starDrawerRef = useRef<BackgroundStarDrawer | null>(null);
-  const witchDrawerRef = useRef<WitchDrawer | null>(null);
   const snowflakes = useRef<Snowflake[]>([]);
   const shootingStars = useRef<ShootingStar[]>([]);
   const heightMap = useRef<number[]>([]);
   const time = useRef<number>(0);
   const isFirstStar = useRef<boolean>(true);
   const firstStarDelay = useRef<number>(0);
+
+  const catPosition = useRef(window.innerWidth);
+  const catMoving = useRef(false);
   const catImageRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
@@ -38,29 +39,23 @@ const ScenicSpace: React.FC = () => {
 
     window.addEventListener('resize', resize);
 
-    // 초기화
     starDrawerRef.current = new BackgroundStarDrawer();
     snowflakes.current = Array(200).fill(null).map(() => new Snowflake(canvas.height));
     shootingStars.current = Array(1).fill(null).map(() => {
       const star = new ShootingStar();
-      star.active = false;
+      star.active = false; // 처음에는 비활성 상태로 시작
       return star;
     });
 
     // 마녀 이미지 로드
     const cat = new Image();
-    cat.src = `${catImage}?${new Date().getTime()}`;
+    cat.src = `${catImage}?${new Date().getTime()}`; // 캐시 방지로 GIF 움직임 보장
     cat.onload = () => {
+      console.log("마녀 GIF 로드 완료");
       catImageRef.current = cat;
-      // 이미지 로드 완료 후 WitchDrawer 초기화
-      if (catImageRef.current) {
-        witchDrawerRef.current = new WitchDrawer({
-          canvas,
-          ctx,
-          image: catImageRef.current,
-          snowHeightMap: heightMap.current
-        });
-      }
+    };
+    cat.onerror = () => {
+      console.error("마녀 GIF 로드 실패:", cat.src);
     };
 
     const animate = () => {
@@ -88,11 +83,11 @@ const ScenicSpace: React.FC = () => {
         if (!star.active) {
           if (isFirstStar.current) {
             firstStarDelay.current++;
-            if (firstStarDelay.current >= 60*13) {
+            if (firstStarDelay.current >= 60*13) { // 60fps * 13초
               star.reset();
               isFirstStar.current = false;
             }
-          } else if (Math.random() < 0.001) {
+          } else if (Math.random() < 0.001) { // 0007
             star.reset();
           }
         }
@@ -138,23 +133,44 @@ const ScenicSpace: React.FC = () => {
       ctx.fillStyle = snowGradient;
       ctx.fill();
 
-      // 마녀 업데이트 및 그리기
-      if (witchDrawerRef.current) {
-        const avgSnowHeight = Math.round(totalSnow / canvas.width);
-        witchDrawerRef.current.update(avgSnowHeight);
-        witchDrawerRef.current.draw();
+      // 평균 눈 높이 계산 및 마녀 이동 시작 조건
+      const avgSnowHeight = Math.round(totalSnow / canvas.width);
+      if (!catMoving.current && avgSnowHeight > 8) {
+        catMoving.current = true;
+      }
+
+      // 마녀 이동 및 눈 녹이기
+      if (catMoving.current && catImageRef.current) {
+        const catX = Math.floor(catPosition.current);
+        const snowHeight = heightMap.current[catX] || 0;
+
+        ctx.save();
+        const catY = canvas.height - snowHeight - 51; // 눈 높이에 맞춰 마녀 배치, 위치 조정
+        ctx.drawImage(catImageRef.current, catX, catY, 51, 51); // 크기를 51x51으로 조정
+        ctx.restore();
+
+        catPosition.current -= 2; // 마녀 왼쪽으로 이동
+
+        // 마녀가 지나간 곳의 눈 녹이기 (범위 14픽셀로 확대)
+        for (let i = -14; i <= 14; i++) {
+          const idx = Math.floor(catPosition.current + i);
+          if (idx >= 0 && idx < window.innerWidth) {
+            heightMap.current[idx] = Math.max(heightMap.current[idx] - 3, 0);
+          }
+        }
+
+        if (catPosition.current < -14) {
+          catMoving.current = false;
+          catPosition.current = window.innerWidth; // 마녀 위치 초기화
+        }
       }
 
       requestAnimationFrame(animate);
     };
 
     animate();
-
     return () => {
       window.removeEventListener('resize', resize);
-      if (witchDrawerRef.current) {
-        witchDrawerRef.current.cleanup();
-      }
     };
   }, []);
 
