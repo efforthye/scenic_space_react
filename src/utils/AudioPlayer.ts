@@ -29,14 +29,35 @@ export class BackgroundAudio {
     
     private handleTrackEnd = () => {
         if (this.repeatMode === 'all') {
-            this.playNext();
-        } else if (this.isRandom) {
-            this.currentTrack = Math.floor(Math.random() * this.tracks.length);
+            if (this.isRandom) {
+                // 랜덤 재생 모드에서는 현재 곡을 제외한 다른 곡들 중에서 랜덤 선택
+                let nextTrack;
+                do {
+                    nextTrack = Math.floor(Math.random() * this.tracks.length);
+                } while (nextTrack === this.currentTrack && this.tracks.length > 1);
+                this.currentTrack = nextTrack;
+            } else {
+                // 일반 반복 모드에서는 순차적으로 다음 곡 재생
+                this.currentTrack = (this.currentTrack + 1) % this.tracks.length;
+            }
             this.audio.src = this.tracks[this.currentTrack].src;
             this.audio.play().catch(e => console.error("Audio playback failed:", e));
         } else {
-            if (this.currentTrack < this.tracks.length - 1) {
-                this.playNext();
+            // repeatMode가 'off'인 경우
+            if (this.isRandom) {
+                if (this.currentTrack < this.tracks.length - 1) {
+                    let nextTrack;
+                    do {
+                        nextTrack = Math.floor(Math.random() * this.tracks.length);
+                    } while (nextTrack === this.currentTrack && this.tracks.length > 1);
+                    this.currentTrack = nextTrack;
+                    this.audio.src = this.tracks[this.currentTrack].src;
+                    this.audio.play().catch(e => console.error("Audio playback failed:", e));
+                }
+            } else {
+                if (this.currentTrack < this.tracks.length - 1) {
+                    this.playNext();
+                }
             }
         }
     }
