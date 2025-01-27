@@ -4,7 +4,7 @@ export class BackgroundAudio {
     private currentTrack: number = 0;
     private isPlaying: boolean = false;
     private isRandom: boolean = false;
-    private repeatMode: 'off' | 'all' = 'off';
+    private repeatMode: 'off' | 'all' | 'one' = 'off';
     
     constructor() {
         this.audio = new Audio();
@@ -28,6 +28,14 @@ export class BackgroundAudio {
     }
     
     private handleTrackEnd = () => {
+        // 한 곡 반복 모드
+        if (this.repeatMode === 'one') {
+            this.audio.currentTime = 0;
+            this.audio.play().catch(e => console.error("Audio playback failed:", e));
+            return;
+        }
+        
+        // 전체 반복 모드
         if (this.repeatMode === 'all') {
             if (this.isRandom) {
                 // 랜덤 재생 모드에서는 현재 곡을 제외한 다른 곡들 중에서 랜덤 선택
@@ -95,7 +103,7 @@ export class BackgroundAudio {
         this.isRandom = !this.isRandom;
     }
 
-    public setRepeatMode(mode: 'off' | 'all'): void {
+    public setRepeatMode(mode: 'off' | 'all' | 'one'): void {
         this.repeatMode = mode;
     }
     
@@ -119,5 +127,4 @@ export class BackgroundAudio {
         this.audio.currentTime = 0;
         this.isPlaying = false;
     }
-    
 }

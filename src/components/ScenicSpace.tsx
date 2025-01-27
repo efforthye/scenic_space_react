@@ -149,7 +149,7 @@ const ScenicSpace: React.FC = () => {
         ctx.drawImage(catImageRef.current, catX, catY, 51, 51); // 크기를 51x51으로 조정
         ctx.restore();
 
-        catPosition.current -= 2; // 마녀 왼쪽으로 이동
+        catPosition.current -= 4; // 마녀 왼쪽으로 이동
 
         // 마녀가 지나간 곳의 눈 녹이기 (범위 14픽셀로 확대)
         for (let i = -14; i <= 14; i++) {
