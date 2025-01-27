@@ -10,8 +10,10 @@ const ScenicSpace: React.FC = () => {
   const shootingStars = useRef<ShootingStar[]>([]);
   const heightMap = useRef<number[]>([]);
   const time = useRef<number>(0);
+  const isFirstStar = useRef<boolean>(true);
+  const firstStarDelay = useRef<number>(0);
 
-  const catPosition = useRef(window.innerWidth); // 마녀 시작 위치 (오른쪽)
+  const catPosition = useRef(window.innerWidth);
   const catMoving = useRef(false);
   const catImageRef = useRef<HTMLImageElement | null>(null);
 
@@ -39,7 +41,11 @@ const ScenicSpace: React.FC = () => {
 
     starDrawerRef.current = new BackgroundStarDrawer();
     snowflakes.current = Array(200).fill(null).map(() => new Snowflake(canvas.height));
-    shootingStars.current = Array(1).fill(null).map(() => new ShootingStar());
+    shootingStars.current = Array(1).fill(null).map(() => {
+      const star = new ShootingStar();
+      star.active = false; // 처음에는 비활성 상태로 시작
+      return star;
+    });
 
     // 마녀 이미지 로드
     const cat = new Image();
@@ -73,8 +79,17 @@ const ScenicSpace: React.FC = () => {
       shootingStars.current.forEach(star => {
         star.update();
         star.draw(ctx);
-        if (!star.active && Math.random() < 0.00007) {
-          star.reset();
+        
+        if (!star.active) {
+          if (isFirstStar.current) {
+            firstStarDelay.current++;
+            if (firstStarDelay.current >= 60*13) { // 60fps * 13초
+              star.reset();
+              isFirstStar.current = false;
+            }
+          } else if (Math.random() < 0.001) { // 0007
+            star.reset();
+          }
         }
       });
 

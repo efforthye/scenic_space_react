@@ -1,5 +1,5 @@
 export class BackgroundAudio {
-    private audio: HTMLAudioElement;
+    public audio: HTMLAudioElement;
     private tracks: Array<{title: string, src: string}>;
     private currentTrack: number = 0;
     private isPlaying: boolean = false;
