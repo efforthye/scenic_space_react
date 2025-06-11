@@ -9,7 +9,6 @@ interface MusicControllerProps {
 
 const MusicController: React.FC<MusicControllerProps> = ({ audioPlayer, onUpdate }) => {
     const [isPlaying, setIsPlaying] = useState(audioPlayer.getIsPlaying());
-    const [currentTitle, setCurrentTitle] = useState(audioPlayer.getCurrentTrackInfo().title);
     const [playMode, setPlayMode] = useState<'normal' | 'repeat-one' | 'repeat-all' | 'random'>('normal');
     const [volume, setVolume] = useState(100);
     const [showVolume, setShowVolume] = useState(false);
@@ -17,7 +16,6 @@ const MusicController: React.FC<MusicControllerProps> = ({ audioPlayer, onUpdate
 
     useEffect(() => {
         const updateInterval = setInterval(() => {
-            setCurrentTitle(audioPlayer.getCurrentTrackInfo().title);
             setIsPlaying(audioPlayer.getIsPlaying());
         }, 100);
         return () => clearInterval(updateInterval);

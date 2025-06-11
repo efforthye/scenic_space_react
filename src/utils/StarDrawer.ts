@@ -1,4 +1,4 @@
-import { BackgroundStar, Star } from '../types/star.types';
+import { BackgroundStar } from '../types/star.types';
 
 export class ShootingStar {
     x: number = 0;
